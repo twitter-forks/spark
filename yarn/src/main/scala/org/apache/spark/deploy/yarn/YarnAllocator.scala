@@ -215,6 +215,7 @@ private[yarn] class YarnAllocator(
    * @return Whether the new requested total is different than the old value.
    */
   def requestTotalExecutorsWithPreferredLocalities(
+      containerStats: ContainerStats,
       requestedTotal: Int,
       localityAwareTasks: Int,
       hostToLocalTaskCount: Map[String, Int]): Boolean = synchronized {
@@ -251,7 +252,7 @@ private[yarn] class YarnAllocator(
    *
    * This must be synchronized because variables read in this method are mutated by other methods.
    */
-  def allocateResources(): Unit = synchronized {
+  def allocateResources(containerStats: ContainerStats): Unit = synchronized {
     updateResourceRequests()
 
     val progressIndicator = 0.1f
@@ -268,13 +269,13 @@ private[yarn] class YarnAllocator(
           numExecutorsRunning,
           allocateResponse.getAvailableResources))
 
-      handleAllocatedContainers(allocatedContainers.asScala)
+      handleAllocatedContainers(allocatedContainers.asScala, containerStats)
     }
 
     val completedContainers = allocateResponse.getCompletedContainersStatuses()
     if (completedContainers.size > 0) {
       logDebug("Completed %d containers".format(completedContainers.size))
-      processCompletedContainers(completedContainers.asScala)
+      processCompletedContainers(completedContainers.asScala, containerStats)
       logDebug("Finished processing %d completed containers. Current running executor count: %d."
         .format(completedContainers.size, numExecutorsRunning))
     }
@@ -404,7 +405,9 @@ private[yarn] class YarnAllocator(
    *
    * Visible for testing.
    */
-  def handleAllocatedContainers(allocatedContainers: Seq[Container]): Unit = {
+  def handleAllocatedContainers(
+      allocatedContainers: Seq[Container],
+      containerStats: ContainerStats): Unit = {
     val containersToUse = new ArrayBuffer[Container](allocatedContainers.size)
 
     // Match incoming requests by host
@@ -437,7 +440,7 @@ private[yarn] class YarnAllocator(
       }
     }
 
-    runAllocatedContainers(containersToUse)
+    runAllocatedContainers(containersToUse, containerStats)
 
     logInfo("Received %d containers from YARN, launching executors on %d of them."
       .format(allocatedContainers.size, containersToUse.size))
@@ -480,13 +483,17 @@ private[yarn] class YarnAllocator(
   /**
    * Launches executors in the allocated containers.
    */
-  private def runAllocatedContainers(containersToUse: ArrayBuffer[Container]): Unit = {
+  private def runAllocatedContainers(
+      containersToUse: ArrayBuffer[Container],
+      containerStats: ContainerStats): Unit = {
     for (container <- containersToUse) {
       executorIdCounter += 1
       val executorHostname = container.getNodeId.getHost
       val containerId = container.getId
       val executorId = executorIdCounter.toString
       assert(container.getResource.getMemory >= resource.getMemory)
+
+      containerStats.acquired(container)
       logInfo(s"Launching container $containerId on host $executorHostname")
 
       def updateInternalState(): Unit = synchronized {
@@ -540,7 +547,9 @@ private[yarn] class YarnAllocator(
   }
 
   // Visible for testing.
-  private[yarn] def processCompletedContainers(completedContainers: Seq[ContainerStatus]): Unit = {
+  private[yarn] def processCompletedContainers(
+      completedContainers: Seq[ContainerStatus],
+      containerStats: ContainerStats): Unit = {
     for (completedContainer <- completedContainers) {
       val containerId = completedContainer.getContainerId
       val alreadyReleased = releasedContainers.remove(containerId)

@@ -28,6 +28,7 @@ import scala.concurrent.duration.Duration
 import scala.util.control.NonFatal
 
 import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.hadoop.security.UserGroupInformation
 import org.apache.hadoop.yarn.api._
 import org.apache.hadoop.yarn.api.records._
 import org.apache.hadoop.yarn.conf.YarnConfiguration
@@ -52,6 +53,11 @@ private[spark] class ApplicationMaster(
     args: ApplicationMasterArguments,
     client: YarnRMClient)
   extends Logging {
+
+  // for getting the MegaByteMillis
+   private val containerStats = new ContainerStats
+   // launchTime of the application master, used to calculate MegaByteMillis
+   private val amLaunchTime = System.currentTimeMillis()
 
   // TODO: Currently, task to container is computed once (TaskSetManager) - which need not be
   // optimal as more containers are available. Might need to handle this better.
@@ -215,6 +221,26 @@ private[spark] class ApplicationMaster(
         val maxAppAttempts = client.getMaxRegAttempts(sparkConf, yarnConf)
         val isLastAttempt = client.getAttemptId().getAttemptId() >= maxAppAttempts
 
+        // The application is terminating, mark all containers as completed for
+        // calculating MegaByteMillis
+        // Dump the MegaByteMillis as the first step in the cleanupHook to avoid
+        val containersMM = containerStats.completedMegabyteMillis
+        val amRunningTime = System.currentTimeMillis() - amLaunchTime
+
+        // MegaByteMillis for the application master
+        val amMM = args.amMemory * amRunningTime
+
+        HRavenLogger.log(
+          MegaByteMillis(containersMM + amMM),
+          AppName(sparkConf.get("spark.app.name")),
+          SparkAppID(client.getAttemptId()),
+          finalStatus,
+          AppStartTime(amLaunchTime),
+          AppSubmitTime(amLaunchTime),
+          AppFinishTime(System.currentTimeMillis()),
+          UserName(UserGroupInformation.getCurrentUser.getUserName),
+          sparkConf)
+
         if (!finished) {
           // The default state of ApplicationMaster is failed if it is invoked by shut down hook.
           // This behavior is different compared to 1.x version.
@@ -365,7 +391,7 @@ private[spark] class ApplicationMaster(
       securityMgr,
       localResources)
 
-    allocator.allocateResources()
+    allocator.allocateResources(containerStats)
     reporterThread = launchReporterThread()
   }
 
@@ -455,7 +481,7 @@ private[spark] class ApplicationMaster(
                 s"Max number of executor failures ($maxNumExecutorFailures) reached")
             } else {
               logDebug("Sending progress")
-              allocator.allocateResources()
+              allocator.allocateResources(containerStats)
             }
             failureCount = 0
           } catch {
@@ -694,7 +720,7 @@ private[spark] class ApplicationMaster(
       case RequestExecutors(requestedTotal, localityAwareTasks, hostToLocalTaskCount) =>
         Option(allocator) match {
           case Some(a) =>
-            if (a.requestTotalExecutorsWithPreferredLocalities(requestedTotal,
+            if (a.requestTotalExecutorsWithPreferredLocalities(containerStats, requestedTotal,
               localityAwareTasks, hostToLocalTaskCount)) {
               resetAllocatorInterval()
             }

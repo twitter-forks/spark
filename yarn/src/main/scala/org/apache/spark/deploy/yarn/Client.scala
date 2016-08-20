@@ -920,6 +920,8 @@ private[spark] class Client(
       javaOpts += "-XX:CMSIncrementalDutyCycle=10"
     }
 
+    sparkConf.set("spark.app.submit.time", System.currentTimeMillis().toString)
+
     // Include driver-specific java options if we are launching a driver
     if (isClusterMode) {
       val driverOpts = sparkConf.get(DRIVER_JAVA_OPTIONS).orElse(sys.env.get("SPARK_JAVA_OPTS"))
@@ -996,6 +998,7 @@ private[spark] class Client(
     val amArgs =
       Seq(amClass) ++ userClass ++ userJar ++ primaryPyFile ++ primaryRFile ++
         userArgs ++ Seq(
+          "--am-memory", amMemory.toString,
           "--properties-file", buildPath(YarnSparkHadoopUtil.expandEnvironment(Environment.PWD),
             LOCALIZED_CONF_DIR, SPARK_CONF_FILE))
 

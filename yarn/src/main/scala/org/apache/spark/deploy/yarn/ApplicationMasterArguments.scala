@@ -28,6 +28,7 @@ class ApplicationMasterArguments(val args: Array[String]) {
   var primaryRFile: String = null
   var userArgs: Seq[String] = Nil
   var propertiesFile: String = null
+  var amMemory = 0
 
   parseArgs(args.toList)
 
@@ -46,6 +47,10 @@ class ApplicationMasterArguments(val args: Array[String]) {
 
         case ("--class") :: value :: tail =>
           userClass = value
+          args = tail
+
+        case ("--am-memory") :: IntParam(value) :: tail =>
+          amMemory = value
           args = tail
 
         case ("--primary-py-file") :: value :: tail =>
