@@ -94,6 +94,33 @@ class MessageWithHeader extends AbstractReferenceCounted implements FileRegion {
   public long transfered() {
     return totalBytesTransferred;
   }
+  
+  @Override
+  public long transferred() {
+    return totalBytesTransferred;
+  }
+  
+  @Override
+  public FileRegion retain() {
+    super.retain();
+    return this;
+  }
+
+  @Override
+  public FileRegion retain(int increment) {
+    super.retain(increment);
+    return this;
+  }
+  
+  @Override
+  public FileRegion touch() {
+      return this;
+  }
+
+  @Override
+  public FileRegion touch(Object hint) {
+      return this;
+  }
 
   /**
    * This code is more complicated than you would think because we might require multiple

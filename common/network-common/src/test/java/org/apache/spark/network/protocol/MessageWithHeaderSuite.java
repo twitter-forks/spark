@@ -100,8 +100,8 @@ public class MessageWithHeaderSuite {
   private ByteBuf doWrite(MessageWithHeader msg, int minExpectedWrites) throws Exception {
     int writes = 0;
     ByteArrayWritableChannel channel = new ByteArrayWritableChannel((int) msg.count());
-    while (msg.transfered() < msg.count()) {
-      msg.transferTo(channel, msg.transfered());
+    while (msg.transferred() < msg.count()) {
+      msg.transferTo(channel, msg.transferred());
       writes++;
     }
     assertTrue("Not enough writes!", minExpectedWrites <= writes);
@@ -132,6 +132,33 @@ public class MessageWithHeaderSuite {
     @Override
     public long transfered() {
       return 8 * written;
+    }
+    
+    @Override
+    public long transferred() {
+      return 8 * written;
+    }
+
+    @Override
+    public FileRegion retain() {
+      super.retain();
+      return this;
+    }
+
+    @Override
+    public FileRegion retain(int increment) {
+      super.retain(increment);
+      return this;
+    }
+
+    @Override
+    public FileRegion touch() {
+        return this;
+    }
+
+    @Override
+    public FileRegion touch(Object hint) {
+        return this;
     }
 
     @Override

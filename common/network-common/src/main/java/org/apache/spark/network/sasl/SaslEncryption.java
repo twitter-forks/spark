@@ -33,6 +33,7 @@ import io.netty.channel.ChannelPromise;
 import io.netty.channel.FileRegion;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.util.AbstractReferenceCounted;
+import io.netty.util.ReferenceCounted;
 
 import org.apache.spark.network.util.ByteArrayWritableChannel;
 import org.apache.spark.network.util.NettyUtils;
@@ -185,6 +186,33 @@ class SaslEncryption {
     @Override
     public long transfered() {
       return transferred;
+    }
+    
+    @Override
+    public long transferred() {
+      return transferred;
+    }
+    
+    @Override
+    public FileRegion retain() {
+      super.retain();
+      return this;
+    }
+
+    @Override
+    public FileRegion retain(int increment) {
+      super.retain(increment);
+      return this;
+    }
+    
+    @Override
+    public FileRegion touch() {
+        return this;
+    }
+
+    @Override
+    public FileRegion touch(Object hint) {
+        return this;
     }
 
     /**

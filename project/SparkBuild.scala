@@ -248,7 +248,8 @@ object SparkBuild extends PomBuild {
     resolvers := Seq(
       DefaultMavenRepository,
       Resolver.mavenLocal,
-      Resolver.file("local", file(Path.userHome.absolutePath + "/.ivy2/local"))(Resolver.ivyStylePatterns)
+      Resolver.file("local", file(Path.userHome.absolutePath + "/.ivy2/local"))(Resolver.ivyStylePatterns),
+      "twitter" at "https://artifactory.twitter.biz/libs-releases-local"
     ),
     externalResolvers := resolvers.value,
     otherResolvers <<= SbtPomKeys.mvnLocalRepository(dotM2 => Seq(Resolver.file("dotM2", dotM2))),

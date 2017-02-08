@@ -45,7 +45,8 @@ class ContainerPlacementStrategySuite extends SparkFunSuite with Matchers with B
 
     val handler = createAllocator(2)
     handler.updateResourceRequests()
-    handler.handleAllocatedContainers(Array(createContainer("host1"), createContainer("host2")))
+    handler
+      .handleAllocatedContainers(Array(createContainer("host1"), createContainer("host2")), null)
 
     val localities = handler.containerPlacementStrategy.localityOfRequestedContainers(
       3, 15, Map("host3" -> 15, "host4" -> 15, "host5" -> 10),
@@ -68,7 +69,7 @@ class ContainerPlacementStrategySuite extends SparkFunSuite with Matchers with B
       createContainer("host1"),
       createContainer("host1"),
       createContainer("host2")
-    ))
+    ), null)
 
     val localities = handler.containerPlacementStrategy.localityOfRequestedContainers(
       3, 15, Map("host1" -> 15, "host2" -> 15, "host3" -> 10),
@@ -89,7 +90,7 @@ class ContainerPlacementStrategySuite extends SparkFunSuite with Matchers with B
       createContainer("host1"),
       createContainer("host1"),
       createContainer("host2")
-    ))
+    ), null)
 
     val localities = handler.containerPlacementStrategy.localityOfRequestedContainers(
       1, 15, Map("host1" -> 15, "host2" -> 15, "host3" -> 10),
@@ -109,7 +110,7 @@ class ContainerPlacementStrategySuite extends SparkFunSuite with Matchers with B
       createContainer("host2"),
       createContainer("host2"),
       createContainer("host3")
-    ))
+    ), null)
 
     val localities = handler.containerPlacementStrategy.localityOfRequestedContainers(
       3, 15, Map("host1" -> 15, "host2" -> 15, "host3" -> 10),
@@ -123,7 +124,8 @@ class ContainerPlacementStrategySuite extends SparkFunSuite with Matchers with B
 
     val handler = createAllocator(2)
     handler.updateResourceRequests()
-    handler.handleAllocatedContainers(Array(createContainer("host1"), createContainer("host2")))
+    handler
+      .handleAllocatedContainers(Array(createContainer("host1"), createContainer("host2")), null)
 
     val localities = handler.containerPlacementStrategy.localityOfRequestedContainers(
       1, 0, Map.empty, handler.allocatedHostToContainersMap, Seq.empty)
@@ -138,7 +140,7 @@ class ContainerPlacementStrategySuite extends SparkFunSuite with Matchers with B
       createContainer("host1"),
       createContainer("host1"),
       createContainer("host2")
-    ))
+    ), null)
 
     val pendingAllocationRequests = Seq(
       createContainerRequest(Array("host2", "host3")),
