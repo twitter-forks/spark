@@ -134,14 +134,14 @@ class YarnAllocatorSuite extends SparkFunSuite with Matchers with BeforeAndAfter
     handler.getPendingAllocate.size should be (1)
 
     val container = createContainer("host1")
-    handler.handleAllocatedContainers(Array(container))
+    handler.handleAllocatedContainers(Array(container), null)
 
     handler.getNumExecutorsRunning should be (1)
     handler.allocatedContainerToHostMap.get(container.getId).get should be ("host1")
     handler.allocatedHostToContainersMap.get("host1").get should contain (container.getId)
 
     val container2 = createContainer("host2")
-    handler.handleAllocatedContainers(Array(container2))
+    handler.handleAllocatedContainers(Array(container2), null)
     handler.getNumExecutorsRunning should be (1)
   }
 
