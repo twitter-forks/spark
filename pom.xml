@@ -236,6 +236,39 @@
         <enabled>false</enabled>
       </snapshots>
     </repository>
+    <repository>
+      <id>twitter binary</id>
+      <name>Twitter Binary Repository</name>
+      <url>http://binaries.local.twitter.com/maven/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>twitter mvn</id>
+      <name>Twitter Repository</name>
+      <url>http://maven.twttr.com/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>twitter repo</id>
+      <name>Twitter Artifactory Repository</name>
+      <url>https://artifactory.twitter.biz/libs-releases-local</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
   </repositories>
   <pluginRepositories>
     <pluginRepository>
